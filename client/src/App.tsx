@@ -1,7 +1,14 @@
+import { Layout } from "antd";
+import { Outlet } from "react-router-dom";
+
+const { Content } = Layout;
+
 export default function App() {
   return (
-    <div>
-      <h1>App</h1>
-    </div>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Content>
+        <Outlet />
+      </Content>
+    </Layout>
   );
 }
