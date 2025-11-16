@@ -2,5 +2,9 @@ node_modules/
 dist/
 
 .env
+*.sqlite
+*.db
+*.sqbpro
+
 .DS_Store
 **/.DS_Store

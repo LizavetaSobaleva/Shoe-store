@@ -3,9 +3,14 @@ import cors from "cors";
 import { db } from "./db.js";
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://nielsen-shoe-store.netlify.app"],
+  })
+);
+
 app.use(express.json());
 
 app.post("/api/login", (req, res) => {
@@ -105,5 +110,5 @@ app.post("/api/purchase/complete", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
+  console.log(`Backend running on port ${PORT}`);
 });
