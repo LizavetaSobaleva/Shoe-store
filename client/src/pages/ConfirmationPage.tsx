@@ -1,10 +1,19 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Result, Button } from "antd";
+import { useEffect } from "react";
+import { trackEvent } from "../analytics";
 
 export default function ConfirmationPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const total = (location.state as { total?: number } | null)?.total ?? 0;
+
+  useEffect(() => {
+    trackEvent("purchase_complete", {
+      page: "confirmation",
+      total,
+    });
+  }, [total]);
 
   return (
     <Result

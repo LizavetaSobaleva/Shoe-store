@@ -4,6 +4,7 @@ import { login } from "../api/auth";
 import { useAuthStore } from "../store/authStore";
 import { loginWithGoogle, loginWithFacebook } from "../firebase";
 import { trackEvent } from "../analytics";
+import { useEffect } from "react";
 
 const { Title, Text } = Typography;
 
@@ -11,36 +12,76 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((s) => s.setUser);
 
+  useEffect(() => {
+    trackEvent("view_login", {
+      page: "login",
+    });
+  }, []);
+
   const onFinish = async (values: any) => {
     try {
       const user = await login(values.email, values.password);
+
+      trackEvent("login_success", {
+        method: "password",
+      });
+
       setUser(user);
       navigate("/", { replace: true });
     } catch (e: any) {
+      trackEvent("login_error", {
+        method: "password",
+        error_message: e.response?.data?.message || "unknown_error",
+      });
+
       alert(e.response?.data?.message || "Login failed");
     }
   };
 
   const handleGoogle = async () => {
-    const fbUser = await loginWithGoogle();
-    setUser({
-      id: null,
-      firstName: fbUser.displayName || "Google",
-      lastName: "",
-      email: fbUser.email || "",
-    });
-    navigate("/", { replace: true });
+    try {
+      const fbUser = await loginWithGoogle();
+
+      trackEvent("login_success", {
+        method: "google",
+      });
+
+      setUser({
+        id: null,
+        firstName: fbUser.displayName || "Google",
+        lastName: "",
+        email: fbUser.email || "",
+      });
+      navigate("/", { replace: true });
+    } catch (e: any) {
+      trackEvent("login_error", {
+        method: "google",
+        error_message: e?.message || "google_popup_error",
+      });
+    }
   };
 
   const handleFacebook = async () => {
-    const fbUser = await loginWithFacebook();
-    setUser({
-      id: null,
-      firstName: fbUser.displayName || "Facebook",
-      lastName: "",
-      email: fbUser.email || "",
-    });
-    navigate("/", { replace: true });
+    try {
+      const fbUser = await loginWithFacebook();
+
+      trackEvent("login_success", {
+        method: "facebook",
+      });
+
+      setUser({
+        id: null,
+        firstName: fbUser.displayName || "Facebook",
+        lastName: "",
+        email: fbUser.email || "",
+      });
+      navigate("/", { replace: true });
+    } catch (e: any) {
+      trackEvent("login_error", {
+        method: "facebook",
+        error_message: e?.message || "facebook_popup_error",
+      });
+    }
   };
 
   return (

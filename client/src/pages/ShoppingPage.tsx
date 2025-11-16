@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import type { Product } from "../types";
 import { fetchProducts } from "../api/products";
 import { useCartStore } from "../store/cartStore";
+import { trackEvent } from "../analytics";
 
 export default function ShoppingPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,7 +17,14 @@ export default function ShoppingPage() {
   useEffect(() => {
     setLoading(true);
     fetchProducts()
-      .then(setProducts)
+      .then((data) => {
+        setProducts(data);
+
+        trackEvent("view_products", {
+          page: "products",
+          count: data.length,
+        });
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -41,11 +49,16 @@ export default function ShoppingPage() {
       render: (text, record) => (
         <Button
           type="link"
-          onClick={() =>
+          onClick={() => {
+            trackEvent("click_product_video", {
+              product_id: record.id,
+              product_name: record.description,
+            });
+
             navigate(`/product/${record.id}/video`, {
               state: { url: record.url },
-            })
-          }
+            });
+          }}
         >
           {text}
         </Button>
@@ -89,7 +102,13 @@ export default function ShoppingPage() {
       <Button
         type="primary"
         style={{ marginTop: 16, minWidth: 80 }}
-        onClick={() => navigate("/summary")}
+        onClick={() => {
+          trackEvent("start_checkout", {
+            total_items: items.filter((i) => i.quantity > 0).length,
+          });
+
+          navigate("/summary");
+        }}
       >
         Buy
       </Button>

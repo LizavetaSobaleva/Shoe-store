@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, Typography, Button, Alert, Space } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { Product } from "../types";
 import { fetchProducts } from "../api/products";
 import { useCartStore } from "../store/cartStore";
 import { completePurchase } from "../api/purchase";
+import { trackEvent } from "../analytics";
 
 const { Title, Text } = Typography;
 
@@ -52,6 +52,30 @@ export default function SummaryPage() {
 
       setRows(r);
       setErrors(errs);
+
+      trackEvent("view_summary", {
+        page: "summary",
+        valid_rows: r.length,
+        errors: errs.length,
+      });
+
+      if (r.length > 0) {
+        trackEvent("view_cart_items", {
+          items: r.map((row) => ({
+            id: row.id,
+            quantity: row.quantity,
+            price: row.price,
+          })),
+        });
+      }
+
+      if (errs.length > 0) {
+        errs.forEach((err) => {
+          trackEvent("quantity_error", {
+            message: err,
+          });
+        });
+      }
     }
     buildSummary();
   }, [items]);
@@ -67,6 +91,16 @@ export default function SummaryPage() {
 
   const handleComplete = async () => {
     setLoading(true);
+
+    trackEvent("purchase_start", {
+      total,
+      items: rows.map((r) => ({
+        id: r.id,
+        quantity: r.quantity,
+        price: r.price,
+      })),
+    });
+
     try {
       await completePurchase(
         rows.map((r) => ({ id: r.id, quantity: r.quantity }))
